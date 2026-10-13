@@ -18,11 +18,11 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        username:{
+        username: {
             type: String,
             required: true,
             unique: true,
-             lowercase: true
+            lowercase: true
         },
         email: {
             type: String,
@@ -39,7 +39,9 @@ const userSchema = new mongoose.Schema(
             // required:true   
         },
         blogs: {
-            type: Array,
+            //type: Array,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Blog'
         },
         bio: {
             type: String,

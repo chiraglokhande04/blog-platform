@@ -1,5 +1,8 @@
 const mongoose = require("mongoose")
 
+// mongodb -> database //ODM.  // mongoose
+// sql -> ORM  -> sequelize, drizzle, prisma
+
 const blogSchema = new mongoose.Schema(
     {
         title:{
