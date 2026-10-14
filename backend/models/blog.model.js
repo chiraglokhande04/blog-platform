@@ -29,8 +29,8 @@ const blogSchema = new mongoose.Schema(
             ref: 'User'
         },
         category: {
-            type: String,
-            default: "General"
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Category'
         },
         tags: {
             type: String,
