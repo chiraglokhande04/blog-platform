@@ -6,6 +6,7 @@ const Blog = require("../models/blog.model")
 //getBlogBySlug
 //getMyBlogs
 //updateBlog
+
 //publishBlog
 //deleteBlog
 //toggleLike
@@ -58,15 +59,24 @@ const createBlog = async (req, res) => {
         const {
             title,
             content,
-            converImage,
+            description,
+            coverImage,
             category,
-            tags
+            tags,
+            status
         } = req.body
 
         if (!title?.trim() || content?.trim()) {
             return res.status(400).json({
                 success: false,
                 message: "Title and Content are required"
+            })
+        }
+
+        if (status !== undefined && !["draft", "published"].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Status"
             })
         }
 
@@ -80,16 +90,26 @@ const createBlog = async (req, res) => {
             })
         }
 
+        if (tags !== undefined && !Array.isArray(tags)) {
+            return res.status(400).json({
+                success: true,
+                message: "Tags must be an array"
+            })
+        }
+
+        const blogStatus = status || "draft"
         const slug = await generateUniqueSlug(title)
 
         const Blog = await Blog.create({
             title: title.trim(),
             slug,
             content,
+            description,
             coverImage: coverImage || "",
             author: req.user.id,
             category: category || null,
             tags: tags || [],
+            status: blogStatus,
             publishedAt: new Date()
 
         })
@@ -134,7 +154,7 @@ const getAllBlogs = async (req, res) => {
         const pageNumber = Math.max(1, parseInt(page, 10) || 1)
         const pageSize = math.min(50, Math.max(1, parseInt(limit, 10) || 10))
 
-        const filter = {}
+        const filter = { status: "published" }
 
         if (search?.trim()) {
             const escapedSearch = search
@@ -143,6 +163,7 @@ const getAllBlogs = async (req, res) => {
 
             filter.$or = [
                 { title: { $regex: escapedSearch, $options: "i" } },
+                { description: { $regex: escapedSearch, $options: "i" } },
                 { content: { $regex: escapedSearch, $options: "i" } }
             ]
         }
@@ -208,6 +229,217 @@ const getAllBlogs = async (req, res) => {
 
     } catch (err) {
         console.log("Error in getAllBlogs Controller: ", err)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        })
+
+    }
+}
+
+
+const getBlogBySlug = async (req, res) => {
+    try {
+
+        const blog = await Blog.findOneAndUpdate({
+            slug: req.params.slug,
+            status: "published"
+        })
+            .populate("author", "name username avatar")
+            .populate("category", "name slug")
+
+
+        if (!blog) {
+            return res.status(404).json({
+                status: false,
+                message: "Blog not found"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            blog,
+        })
+
+    } catch (err) {
+        console.log("Error in getblogBySlug Controller: ", err)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        })
+
+    }
+}
+
+
+const getMyBlogs = async (req, res) => {
+    try {
+
+        const {
+            page = 1,
+            limit = 10,
+            status
+        } = req.query
+
+        const pageNumber = Math.max(1, parseInt(page, 10) || 1)
+        const pageSize = math.min(50, Math.max(1, parseInt(limit, 10) || 10))
+
+        const filter = { author: req.user.id }
+
+        if (status) {
+            if (!["draft", "published"].includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid Status"
+                })
+            }
+
+            filter.status = status
+        }
+
+        const [blogs, totalBlogs] = await Promise.all([
+            Blog.find(filter)
+                .populate("category", "name slug")
+                .sort({ updatedAt: -1 })
+                .skip((pageNumber - 1) * pageSize)
+                .limit(pageSize),
+
+            Blog.countDocuments(filter)
+
+        ])
+        return res.status(200).json({
+            success: true,
+            blogs,
+            pagination: {
+                currentPage: pageNumber,
+                totalPages: Math.ceil(totalBlogs / pageSize),
+                totalBlogs,
+                limit: pageSize
+            }
+        })
+
+
+    } catch (err) {
+        console.log("Error in getMyBlogs Controller: ", err)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        })
+    }
+}
+
+
+
+const updateBlog = async (req, res) => {
+    try {
+
+        const {
+            title,
+            content,
+            description,
+            coverImage,
+            category,
+            tags,
+            status
+        } = req.body
+
+        const blog = await Blog.findById(req.params.id)
+
+        if (!blog) {
+            return res.status(404).json({
+                success: false,
+                message: "Blog not found"
+            })
+        }
+
+        if (blog.author.toString() !== req.user.id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized"
+            })
+        }
+
+
+        if (title !== undefined) {
+            if (!title.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Title cannot be empty"
+                })
+            }
+        }
+
+        blog.title = title.trim()
+        blog.slug = await generateUniqueSlug(title, blog._id)
+
+        if (content !== undefined) {
+            if (!content.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Content cannot be empty"
+                })
+            }
+            blog.content = content
+        }
+
+        if (description !== undefined) {
+            blog.description = description
+        }
+        if (coverImage !== undefined) {
+            blog.coverImage !== coverImage
+        }
+
+        if (category !== undefined) {
+            if (
+                category &&
+                !mongoose.isValidObjectId(category)
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid Category"
+                })
+            }
+            blog.category = category
+        }
+
+        if (tags !== undefined) {
+            if (!Array.isArray(tags)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Tags must be an Array"
+                })
+            }
+
+            blog.tags = tags
+        }
+
+        if (status !== undefined) {
+            if (!["draft", "published"].includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid Status"
+                })
+            }
+            if (status === "published" && !blog.publishedAt) {
+                blog.publishedAt = new Date()
+            }
+            blog.status = status
+        }
+
+        await blog.save();
+
+        const updatedBlog = await Blog.findById(blog._id)
+            .populate("author", "name username avatar")
+            .populate("category", "name slug")
+
+        return res.status(200).json({
+            success: true,
+            blog: updatedBlog
+        })
+
+    } catch (err) {
+
+        console.log("Error in getMyBlogs Controller: ", err)
         res.status(500).json({
             success: false,
             message: "Internal Server Error"

@@ -16,6 +16,11 @@ const blogSchema = new mongoose.Schema(
             unique: true,
             lowercase: true
         },
+        description: {
+            type: String,
+            maxlength: 300,
+            default: ""
+        },
         content:{
             type: String,
             required: true
@@ -32,11 +37,17 @@ const blogSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Category'
         },
-        tags: {
+
+        status: {
             type: String,
             enum: ["draft","published"],
             default: "draft"
         },
+        tags: [{
+            type: String,
+            trim: true,
+            lowercase: true
+        }],
         publishedAt: {
             type: Date,
             default: null
