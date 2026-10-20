@@ -150,7 +150,7 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
     try {
 
-        const {id} = req.params
+        const id = req.user.id
 
         const user = await User.findById(id).select(
             "-password"
