@@ -1,5 +1,6 @@
 const mongoose = require("mongoose")
 const Blog = require("../models/blog.model")
+const Category = require("../models/category.model");
 
 
 
@@ -18,7 +19,7 @@ const createSlug = (title) => {
 
 
 // Generate a unique slug
-const generateUniqueSlug = async (title, excludId = null) => {
+const generateUniqueSlug = async (title, excludeId = null) => {
     const baseSlug = createSlug(title) || "untitled" //my-tech-journey
 
     let slug = baseSlug
@@ -56,7 +57,7 @@ const createBlog = async (req, res) => {
             status
         } = req.body
 
-        if (!title?.trim() || content?.trim()) {
+        if (!title?.trim() || !content?.trim()) {
             return res.status(400).json({
                 success: false,
                 message: "Title and Content are required"
@@ -90,7 +91,7 @@ const createBlog = async (req, res) => {
         const blogStatus = status || "draft"
         const slug = await generateUniqueSlug(title)
 
-        const Blog = await Blog.create({
+        const blog = await Blog.create({
             title: title.trim(),
             slug,
             content,
@@ -142,7 +143,7 @@ const getAllBlogs = async (req, res) => {
 
 
         const pageNumber = Math.max(1, parseInt(page, 10) || 1)
-        const pageSize = math.min(50, Math.max(1, parseInt(limit, 10) || 10))
+        const pageSize = Math.min(50, Math.max(1, parseInt(limit, 10) || 10))
 
         const filter = { status: "published" }
 
@@ -272,7 +273,7 @@ const getMyBlogs = async (req, res) => {
         } = req.query
 
         const pageNumber = Math.max(1, parseInt(page, 10) || 1)
-        const pageSize = math.min(50, Math.max(1, parseInt(limit, 10) || 10))
+        const pageSize = Math.min(50, Math.max(1, parseInt(limit, 10) || 10))
 
         const filter = { author: req.user.id }
 

@@ -3,6 +3,7 @@ require("dotenv").config()
 const express = require("express")
 const mongoose = require("mongoose")
 const authRouter = require("./routes/auth.router")
+const blogRouter = require("./routes/blog.router")
 
 const app = express()
 
@@ -19,6 +20,7 @@ app.use(express.json())
 // auth/register
 
 app.use("/auth",authRouter)
+app.use("/blogs",blogRouter)
 
 async function connectDB() {
     try {

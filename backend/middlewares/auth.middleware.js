@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken")
-const User = require("../models/User")
+const User = require("../models/user.model")
 
 const protect = async (req, res, next) => {
     try {
@@ -17,7 +17,6 @@ const protect = async (req, res, next) => {
         }
         // Bearer token
         const token = authHeader.split(" ")[1]
-
 
         // id -> token
         // token -> id

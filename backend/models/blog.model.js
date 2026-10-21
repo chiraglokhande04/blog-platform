@@ -58,11 +58,11 @@ const blogSchema = new mongoose.Schema(
             min: 0
         },
         likes: [{
-            type: mongoose.Schema.Type.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             ref: "User",
         }],
         comments: [{
-            type: mongoose.Schema.Type.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             ref: "Comment",
         }],
     },
