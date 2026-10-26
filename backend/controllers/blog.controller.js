@@ -106,7 +106,7 @@ const createBlog = async (req, res) => {
         })
 
         const populatedBlog = await Blog.findById(blog._id)
-            .populate("author", "name username avatar")
+            .populate("author", "name username profile_img")
             .populate("category", "name slug")
 
 
@@ -197,7 +197,7 @@ const getAllBlogs = async (req, res) => {
 
         const [blogs, totalBlogs] = await Promise.all([
             Blog.find(filter)
-                .populate("author", "name username avatar")
+                .populate("author", "name username profile_img")
                 .populate("category", "name slug")
                 .sort(sortBy)
                 .skip((pageNumber - 1) * pageSize)
@@ -236,7 +236,7 @@ const getBlogBySlug = async (req, res) => {
             slug: req.params.slug,
             status: "published"
         })
-            .populate("author", "name username avatar")
+            .populate("author", "name username profile_img")
             .populate("category", "name slug")
 
 
@@ -420,7 +420,7 @@ const updateBlog = async (req, res) => {
         await blog.save();
 
         const updatedBlog = await Blog.findById(blog._id)
-            .populate("author", "name username avatar")
+            .populate("author", "name username profile_img")
             .populate("category", "name slug")
 
         return res.status(200).json({
