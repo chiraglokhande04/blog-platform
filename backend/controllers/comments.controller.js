@@ -199,6 +199,7 @@ const deleteComment = async (req, res) => {
       frontier = children.map((child) => child._id);
       idsToDelete.push(...frontier);
     }
+    
 
     // Delete the selected comment and its entire reply tree.
     await Comment.deleteMany({
