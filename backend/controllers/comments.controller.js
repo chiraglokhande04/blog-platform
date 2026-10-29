@@ -1,8 +1,8 @@
 // controllers/comment.controller.js
 
 const mongoose = require("mongoose");
-const Comment = require("../models/Comment");
-const Blog = require("../models/Blog");
+const Comment = require("../models/comment.model");
+const Blog = require("../models/blog.model");
 
 // Get all comments for a published blog.
 const getBlogComments = async (req, res) => {
@@ -199,7 +199,7 @@ const deleteComment = async (req, res) => {
       frontier = children.map((child) => child._id);
       idsToDelete.push(...frontier);
     }
-    
+
 
     // Delete the selected comment and its entire reply tree.
     await Comment.deleteMany({
@@ -215,10 +215,66 @@ const deleteComment = async (req, res) => {
   }
 };
 
+// Like or unlike a comment.
+const toggleCommentLike = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Validate the comment ID.
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        message: "Invalid comment ID",
+      });
+    }
+
+    // Find the comment.
+    const comment = await Comment.findById(id);
+
+    if (!comment) {
+      return res.status(404).json({
+        message: "Comment not found",
+      });
+    }
+
+    // Check whether the user has already liked this comment.
+    const alreadyLiked = comment.likes.some(
+      (likedUserId) => likedUserId.toString() === userId
+    );
+
+    if (alreadyLiked) {
+      // Remove the user's ID to unlike the comment.
+      comment.likes.pull(userId);
+    } else {
+      // Add the user's ID to like the comment.
+      comment.likes.addToSet(userId);
+    }
+
+    // Save the updated likes array.
+    await comment.save();
+
+    return res.status(200).json({
+      message: alreadyLiked
+        ? "Comment unliked successfully"
+        : "Comment liked successfully",
+      liked: !alreadyLiked,
+      likesCount: comment.likes.length,
+    });
+  } catch (error) {
+    console.error("Toggle comment like error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 // Export all comment controller functions.
 module.exports = {
   getBlogComments,
   createComment,
   updateComment,
   deleteComment,
+  toggleCommentLike
 };
+
