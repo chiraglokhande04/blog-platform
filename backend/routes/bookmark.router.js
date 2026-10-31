@@ -6,12 +6,12 @@ const {
     addBookmark,
     removeBookmark,
     getMyBookmarks
-} = require("../contollers/bookmark.controller")
+} = require("../controllers/bookmark.controller")
 
 const { protect } = require("../middlewares/auth.middleware")
 
 
-router.get("/",protect,getMyBookmarks)
+router.get("/", protect, getMyBookmarks)
 router.post("/:blogId", protect, addBookmark)
 router.delete("/:blogId", protect, removeBookmark)
 

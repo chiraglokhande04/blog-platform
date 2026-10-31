@@ -4,6 +4,7 @@ const express = require("express")
 const mongoose = require("mongoose")
 const authRouter = require("./routes/auth.router")
 const blogRouter = require("./routes/blog.router")
+const bookmarkRouter = require("./routes/bookmark.router")
 
 const app = express()
 
@@ -19,15 +20,16 @@ app.use(express.json())
 
 // auth/register
 
-app.use("/auth",authRouter)
-app.use("/blogs",blogRouter)
+app.use("/auth", authRouter)
+app.use("/blogs", blogRouter)
+app.use("/bookmark", bookmarkRouter)
 
 async function connectDB() {
     try {
         // Connect the client to the server
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('Successfully connected to MongoDB using Native Driver!');
-        
+
         // You can now interact with your collections here (e.g., db.collection('users'))
 
     } catch (error) {

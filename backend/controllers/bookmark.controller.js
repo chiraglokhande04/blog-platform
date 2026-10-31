@@ -98,7 +98,7 @@ const removeBookmark = async(req,res) => {
 const getMyBookmarks = async(req, res)=>{
     try{
 
-        const bookmarks = await find({
+        const bookmarks = await Bookmark.find({
             user: req.user.id
         })
         .populate({
