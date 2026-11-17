@@ -1,62 +1,35 @@
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/Login";
-
-/** Connects LoginPage to the router + auth context. */
-function LoginRoute() {
-  const { user, signIn } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const redirectTo = location.state?.from?.pathname || "/dashboard";
-
-  // Already signed in? Skip the login screen.
-  if (user) return <Navigate to={redirectTo} replace />;
-
-  return (
-    <LoginPage
-      // Demo auth: LoginPage's default onLogin validates admin@example.com / password123.
-      // Pass your own `onLogin` here to call your API and return/throw as needed.
-      onSuccess={() => {}}
-      onLogin={async (values) => {
-        // 1) call your API here, e.g. const res = await api.login(values)
-        // 2) throw new Error("message") on failure
-        await new Promise((r) => setTimeout(r, 900));
-        if (values.email !== "admin@example.com" || values.password !== "password123") {
-          throw new Error("Email or password is incorrect. Check both and try again.");
-        }
-        signIn({ email: values.email }, values.remember);
-        navigate(redirectTo, { replace: true });
-      }}
-      onForgotPassword={() => navigate("/forgot-password")}
-    />
-  );
-}
+// import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import DashboardPage from "./pages/DashboardPage";
+import PlaceholderPage from "./pages/PlaceholderPage";
+import AdminLayout from "./components/AdminLayout";
+import BlogsPage from "./pages/BlogsPage";
 
 function NotFound() {
-  return (
-    <div className="grid min-h-screen place-items-center text-slate-600">
-      Page not found.
-    </div>
-  );
+  return <div className="grid min-h-screen place-items-center text-slate-600">Page not found.</div>;
 }
 
 export default function App() {
   return (
-    <BrowserRouter>
-   
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          {/* <Route path="/forgot-password" element={<ForgotPasswordPage />} /> */}
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+  {/* //  <Route path="/forgot-password" element={<ForgotPasswordPage />} /> */}
 
-          {/* Private routes: add more admin pages inside this wrapper */}
-          {/* <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-          </Route>
+        {/* Pages that share the sidebar layout */}
+        <Route element={<AdminLayout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/blogs" element={<BlogsPage />} />
+          <Route path="/categories" element={<PlaceholderPage title="Categories" />} />
+          <Route path="/comments" element={<PlaceholderPage title="Comments" />} />
+          <Route path="/users" element={<PlaceholderPage title="Users" />} />
+          <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+        </Route>
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} /> */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-     
-    </BrowserRouter>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </HashRouter>
   );
 }
